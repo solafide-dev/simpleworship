@@ -14,6 +14,9 @@ var assets embed.FS
 var icon []byte
 
 func main() {
+	// setup display server (this is very temporary and just for proof of concept)
+	go startDisplayServer()
+
 	// Create an instance of the app structure
 	app := NewApp()
 
