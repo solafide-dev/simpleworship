@@ -1,18 +1,8 @@
-## About
+# Simple Worship
 
-Wails template which includes: Vite, React, TS, TailwindCSS out of the box.
+A wails / React based application for in-church display.
 
-Build with `Wails CLI v2.0.0`.
-
-To use this [template](https://wails.io/docs/community/templates):
-```shell
-wails init -n "Your Project Name" -t https://github.com/hotafrika/wails-vite-react-ts-tailwind-template
-cd frontend/src
-npm install
-```
-
-[Here](scripts) you can find useful scripts for building on different platforms and Wails CLI installation.
-
+TODO: Better README
 ## Live Development
 
 To run in live development mode, run `wails dev` in the project directory. In another terminal, go into the `frontend`
