@@ -1,32 +1,26 @@
-# Simple Worship
+## About
 
-Simple worship is an app who's goal is to provide a simple replacement for many of the popular presentation software offerings available to Churches today.
+Wails template which includes: Vite, React, TS, TailwindCSS out of the box.
 
-## Why Simple Worship?
+Build with `Wails CLI v2.0.0`.
 
-I have a firm believe that worship should not be an entertainment event, but should instead be focused on God -- and as such any displays used should mainly be used for reference material, _not_ for entertainment value.
+To use this [template](https://wails.io/docs/community/templates):
+```shell
+wails init -n "Your Project Name" -t https://github.com/hotafrika/wails-vite-react-ts-tailwind-template
+cd frontend/src
+npm install
+```
 
-- No flashing lights.
-- No smoke machines.
-- Just solid reference materials.
+[Here](scripts) you can find useful scripts for building on different platforms and Wails CLI installation.
 
-## Motivation
+## Live Development
 
-At my church, we have moved through a few different available options over the years, but we never end up using 90% of the features -- as all of our "slides" tend to just be white text on a black background. While I don't have any issues with companies selling products to Churches, I feel like most of this software is heavily targeting people putting on entertainment events, and not actual churches.
+To run in live development mode, run `wails dev` in the project directory. In another terminal, go into the `frontend`
+directory and run `npm run dev`. The frontend dev server will run on http://localhost:34115. Connect to this in your
+browser and connect to your application.
 
-With all the fancy features comes complexity and pain on the part of the person who actually has to use the software. I want it to be _Simple_.
+## Building
 
-## Features
+To build a redistributable, production mode package, use `wails build`.
 
-My end goal is to provide the following "slide" types:
 
-- Songs, with defined parts and song order.
-  - The goal is to be able to define all the lyrics to a song, and then define a parts order, and the software will automatically display the lyrics in the order defined.
-- Bible Reference
-  - Define a verse and version, and automatically generate the slides using a bible API (tbd)
-- Generic Text
-  - Useful for administration tasks like announcements.
-- Embed
-  - Display embeded content -- Mainly useful for Videos that might want to be shown (ex: Mission Trip highlights)
-- Default Screen
-  - Display a "default" screen that can be used when no other slides are being shown (example: church's logo, or name, or just a black screen)
