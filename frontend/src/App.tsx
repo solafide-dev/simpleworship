@@ -1,19 +1,37 @@
-import wailsLogo from './assets/wails.png'
-import './App.css'
+import React, { useContext, useEffect } from 'react';
+import './App.css';
+import { Playlist } from './components/Playlist';
+import { SlideshowContext } from './context/SlideshowContext';
+import { nextSlide, prevSlide } from './context/SlideshowContext/actions';
 
 function App() {
+    const [state, dispatch] = useContext(SlideshowContext)
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.code === 'Space' || e.code === 'ArrowRight') {
+            e.preventDefault()
+            dispatch(nextSlide())
+        }
+        if (e.code === 'Space' || e.code === 'ArrowLeft') {
+            e.preventDefault()
+            dispatch(prevSlide())
+        }
+    }
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    })
+
     return (
-        <div className="min-h-screen bg-white grid grid-cols-1 place-items-center justify-items-center mx-auto py-8">
-            <div className="text-blue-900 text-2xl font-bold font-mono">
-                <h1 className="content-center">Vite + React + TS + Tailwind</h1>
-            </div>
-            <div className="w-fit max-w-md">
-                <a href="https://wails.io" target="_blank">
-                    <img src={wailsLogo} className="logo wails" alt="Wails logo" />
-                </a>
-            </div>
+        <div className="App" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr' }}>
+            <Playlist />
+            <div>{state.prevSlide} | {state.activeSlide} | {state.nextSlide}<pre>{JSON.stringify(state, null, 2)}</pre></div>
         </div>
-    )
+    );
 }
 
-export default App
+export default App;
