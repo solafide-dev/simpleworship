@@ -1,5 +1,5 @@
 import { Reducer } from 'react'
-import { Section, Slide, Song } from '../../global'
+import { Section, Slide, Song } from '../../global.d'
 import { SlideshowAction, SlideshowActions, SlideshowInitialState } from './SlideshowContext.d'
 
 export const SlideshowReducer: Reducer<SlideshowInitialState, SlideshowAction> = (state, action): SlideshowInitialState => {

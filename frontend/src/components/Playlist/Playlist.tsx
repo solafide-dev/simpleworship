@@ -1,15 +1,14 @@
 import React, { useContext, useEffect } from 'react'
 import { SlideshowContext } from '../../context/SlideshowContext'
 import { loadPlaylist, setActiveSlide } from '../../context/SlideshowContext/actions'
-import sundayMorning from '../../data/playlists/sundayMorning'
-import { Playlist as PlaylistType, Song } from '../../global'
+import { Playlist as PlaylistType, Song } from '../../global.d'
 import SongComponent from './Song'
 
 const Playlist = () => {
     const [{ songs }, dispatch] = useContext(SlideshowContext)
 
     useEffect(() => {
-        dispatch(loadPlaylist(sundayMorning))
+        // dispatch(loadPlaylist(sundayMorning))
     }, [])
 
     return (<div>

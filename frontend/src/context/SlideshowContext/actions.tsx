@@ -1,4 +1,4 @@
-import { Playlist } from "../../global";
+import { Playlist } from "../../global.d";
 import { SlideshowAction, SlideshowActions } from "./SlideshowContext.d";
 
 export const setActiveSlide = (id: string): SlideshowAction => {

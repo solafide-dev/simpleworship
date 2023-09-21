@@ -1,5 +1,5 @@
 import React from 'react'
-import { Song as SongType } from '../../global'
+import { Song as SongType } from '../../global.d'
 import SlideThumbnail from './SlideThumbnail'
 
 const Song = ({ name, arrangement, sections }: SongType) => {

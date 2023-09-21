@@ -1,4 +1,4 @@
-import { Song } from "../../global"
+import { Song } from "../../global.d"
 
 export type SlideshowInitialState = {
     activeSong?: Song
