@@ -1,7 +1,19 @@
 import wailsLogo from './assets/wails.png'
 import './App.css'
+import * as Display from '../wailsjs/go/main/DisplayServer'
+import * as rt from '../wailsjs/runtime/runtime'
 
 function App() {
+
+    // Set Slide Data
+    Display.SetData({
+        type: "song", 
+        meta: {section: "Verse 1", text: "This is amazing grace, this is unfailing love\n\nNext line I can't remember yeahhhh"},
+        data: "This is ignored because its not part of the struct"
+    })
+
+    rt.LogInfo("Hello from React!")
+    
     return (
         <div className="min-h-screen bg-white grid grid-cols-1 place-items-center justify-items-center mx-auto py-8">
             <div className="text-blue-900 text-2xl font-bold font-mono">

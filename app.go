@@ -16,8 +16,7 @@ func NewApp() *App {
 }
 
 // startup is called at application startup
-func (a *App) startup(ctx context.Context) {
-	// Perform your setup here
+func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
