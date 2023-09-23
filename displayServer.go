@@ -31,20 +31,20 @@ type DisplayServerData struct {
 type DisplayServer struct {
 	ctx      context.Context
 	server   *http.Server
-	data     DisplayServerData
-	dataChan chan DisplayServerData
+	data     map[int]DisplayServerData
+	dataChan chan map[int]DisplayServerData
 }
 
 func NewDisplayServer() *DisplayServer {
 	return &DisplayServer{
-		dataChan: make(chan DisplayServerData),
+		dataChan: make(chan map[int]DisplayServerData),
 	}
 }
 
 func (d *DisplayServer) SetData(data DisplayServerData) {
 	rt.LogDebugf(d.ctx, "DisplayServer.SetData: %s", data)
-	d.data = data
-	d.dataChan <- data
+	d.data[0] = data
+	d.dataChan <- map[int]DisplayServerData{0: data}
 }
 
 func (d *DisplayServer) startup(ctx context.Context) {
@@ -69,7 +69,7 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		marshaledData, _ := json.Marshal(d.data)
+		marshaledData, _ := json.Marshal(d.data[0])
 		w.Write(marshaledData)
 	}).Methods("GET")
 
@@ -97,8 +97,8 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		}
 
 		// listens to change to the data channel, and writes the data to the response writer
-		for data := range d.dataChan {
-
+		for dataMap := range d.dataChan {
+			data := dataMap[0]
 			rt.LogDebugf(d.ctx, "DisplayServer.dataChan: %s", data)
 
 			m := map[string]any{"data": data}
