@@ -1,46 +1,171 @@
 package main
 
 import (
+	"bytes"
+	"context"
+	"embed"
+	"encoding/json"
 	"fmt"
-	"log"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
+	rt "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-/*
-	This is very _very_ temporary and just for proof of concept.
-	Ideally we expose this in some way that actually interacts with the rest of the app.
+//go:embed frontend-display
+var displayServerFrontend embed.FS
 
-	This is mainly to test the SSDP functionality and make sure it works.
-*/
-
-func startDisplayServer() {
-
-	go ssdpInit()
-
-	fmt.Println("Starting display server")
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Simple Worship Display")
-	})
-
-	err := http.ListenAndServe(":7777", nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
-
+type DisplayServerData struct {
+	Type string                 `json:"type"`
+	Meta map[string]interface{} `json:"meta"`
 }
 
-func ssdpInit() {
-	fmt.Println("ssdp init")
+type DisplayServer struct {
+	ctx      context.Context
+	server   *http.Server
+	data     DisplayServerData
+	dataChan chan DisplayServerData
+}
 
-	ip := GetOutboundIP()
+func NewDisplayServer() *DisplayServer {
+	return &DisplayServer{
+		dataChan: make(chan DisplayServerData),
+	}
+}
+
+func (d *DisplayServer) SetData(data DisplayServerData) {
+	rt.LogDebugf(d.ctx, "DisplayServer.SetData: %s", data)
+	d.data = data
+	d.dataChan <- data
+}
+
+func (d *DisplayServer) startup(ctx context.Context) {
+	d.ctx = ctx
+
+	sentStartEvent := false
+
+	go d.ssdpInit()
+
+	router := mux.NewRouter()
+
+	var frontendFS = fs.FS(displayServerFrontend)
+	staticContent, err := fs.Sub(frontendFS, "frontend-display/src")
+	if err != nil {
+		rt.LogErrorf(d.ctx, "Error: %e", err)
+	}
+
+	httpfs := http.FileServer(http.FS(staticContent))
+	router.PathPrefix("/src/").Handler(http.StripPrefix("/src/", httpfs))
+
+	router.HandleFunc("/data", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		marshaledData, _ := json.Marshal(d.data)
+		w.Write(marshaledData)
+	}).Methods("GET")
+
+	router.HandleFunc("/data-events", func(w http.ResponseWriter, r *http.Request) {
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			rt.LogError(d.ctx, "SSE not supported")
+			http.Error(w, "SSE not supported", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		if !sentStartEvent {
+			sentStartEvent = true
+			sb := strings.Builder{}
+			sb.WriteString(fmt.Sprintf("event: %s\n", "data-app-start"))
+			sb.WriteString(fmt.Sprintf("data: %v\n\n", ""))
+			event := sb.String()
+			_, err = fmt.Fprint(w, event)
+			flusher.Flush()
+		}
+
+		// listens to change to the data channel, and writes the data to the response writer
+		for data := range d.dataChan {
+
+			rt.LogDebugf(d.ctx, "DisplayServer.dataChan: %s", data)
+
+			m := map[string]any{"data": data}
+
+			buff := bytes.NewBuffer([]byte{})
+			encoder := json.NewEncoder(buff)
+			err := encoder.Encode(m)
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			sb := strings.Builder{}
+			sb.WriteString(fmt.Sprintf("event: %s\n", "data-update"))
+			sb.WriteString(fmt.Sprintf("data: %v\n\n", buff.String()))
+			event := sb.String()
+
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			_, err = fmt.Fprint(w, event)
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			flusher.Flush()
+		}
+	})
+
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+		//marshaledMeta, _ := json.Marshal(d.data.Meta)
+
+		// load index.html
+		index, err := displayServerFrontend.ReadFile("frontend-display/index.html")
+		if err != nil {
+			rt.LogErrorf(d.ctx, "Error: %e", err)
+		}
+
+		w.Write(index)
+
+	}).Methods("GET")
+
+	d.server = &http.Server{
+		Addr:    ":7777",
+		Handler: router,
+	}
+
+	// Start the server up
+	go func() {
+		if err := d.server.ListenAndServe(); err != nil {
+			rt.LogErrorf(d.ctx, "Error: %e", err)
+		}
+	}()
+}
+
+func (d *DisplayServer) shutdown(ctx context.Context) {
+	d.server.Shutdown(ctx)
+}
+
+func (d *DisplayServer) ssdpInit() {
+	rt.LogInfo(d.ctx, "ssdp init")
+
+	ip := d.getOutboundIP()
 	id := uuid.New().String()
 
 	ad, err := ssdp.Advertise(
@@ -62,7 +187,7 @@ loop:
 	for {
 		select {
 		case <-aliveTick:
-			fmt.Println("ssdp alive tick")
+			rt.LogInfo(d.ctx, "ssdp alive tick")
 			ad.Alive()
 		case <-quit:
 			break loop
@@ -75,10 +200,10 @@ loop:
 	ad.Close()
 }
 
-func GetOutboundIP() net.IP {
+func (d *DisplayServer) getOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		log.Fatal(err)
+		rt.LogFatalf(d.ctx, "Fatal: %e", err)
 	}
 	defer conn.Close()
 

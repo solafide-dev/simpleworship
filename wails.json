@@ -8,5 +8,6 @@
   "author": {
     "name": "Cameron Chunn",
     "email": "cameronchunn@gmail.com"
-  }
+  },
+  "assetdir": "./frontend-display"
 }
