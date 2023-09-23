@@ -28,11 +28,6 @@ type DisplayServerData struct {
 	Meta map[string]interface{}
 }
 
-type DisplayMetaSong struct {
-	Section string
-	Text    string
-}
-
 type DisplayServer struct {
 	ctx      context.Context
 	server   *http.Server
@@ -134,12 +129,6 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		index, err := displayServerFrontend.ReadFile("frontend-display/index.html")
 		if err != nil {
 			rt.LogErrorf(d.ctx, "Error: %e", err)
-		}
-
-		_, err = displayServerFrontend.ReadFile("frontend-display/src/app.js")
-		if err != nil {
-			rt.LogErrorf(d.ctx, "Error: %e", err)
-			w.Write([]byte(err.Error()))
 		}
 
 		w.Write(index)
