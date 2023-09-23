@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/mux v1.8.0
 	github.com/koron/go-ssdp v0.0.4
 	github.com/wailsapp/wails/v2 v2.6.0
 )
