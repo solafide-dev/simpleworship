@@ -7,7 +7,11 @@ es.onmessage = (msg) => { console.log("data-events message", msg) }
 es.onopen = (...args) => { console.log("Connected to Display Updater", args) }
 es.addEventListener("data-update", (event) => {
     const parsedData = JSON.parse(event.data);
-    updateDisplay(parsedData)
+    updateDisplay(parsedData.data)
+});
+es.addEventListener("data-app-start", (event) => {
+    // on a fresh app start, reload the display view
+    window.location.reload()
 });
 
 // Load initial data from server on first load
@@ -17,8 +21,18 @@ fetch("/data").then((response) => {
     })
 })
 
+
 // Handle the data
 function updateDisplay(data) {
     console.log("updateDisplay", data)
+
+    if (data.type == "song") {
+        document.querySelector("#app").innerHTML = `
+            <h1>${data.meta.section}</h1>
+            <p>${data.meta.text}</p>
+        `
+        return
+    }
+
     document.querySelector("#app").innerHTML = JSON.stringify(data)
 }

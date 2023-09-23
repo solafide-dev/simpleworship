@@ -24,8 +24,8 @@ import (
 var displayServerFrontend embed.FS
 
 type DisplayServerData struct {
-	Type string
-	Meta map[string]interface{}
+	Type string                 `json:"type"`
+	Meta map[string]interface{} `json:"meta"`
 }
 
 type DisplayServer struct {
@@ -49,6 +49,8 @@ func (d *DisplayServer) SetData(data DisplayServerData) {
 
 func (d *DisplayServer) startup(ctx context.Context) {
 	d.ctx = ctx
+
+	sentStartEvent := false
 
 	go d.ssdpInit()
 
@@ -84,6 +86,16 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		w.Header().Set("Connection", "keep-alive")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
+		if !sentStartEvent {
+			sentStartEvent = true
+			sb := strings.Builder{}
+			sb.WriteString(fmt.Sprintf("event: %s\n", "data-app-start"))
+			sb.WriteString(fmt.Sprintf("data: %v\n\n", ""))
+			event := sb.String()
+			_, err = fmt.Fprint(w, event)
+			flusher.Flush()
+		}
+
 		// listens to change to the data channel, and writes the data to the response writer
 		for data := range d.dataChan {
 
@@ -100,10 +112,8 @@ func (d *DisplayServer) startup(ctx context.Context) {
 			}
 
 			sb := strings.Builder{}
-
 			sb.WriteString(fmt.Sprintf("event: %s\n", "data-update"))
 			sb.WriteString(fmt.Sprintf("data: %v\n\n", buff.String()))
-
 			event := sb.String()
 
 			if err != nil {

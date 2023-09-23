@@ -14,14 +14,12 @@ function App() {
             Display.SetData({
                 type: "song", 
                 meta: {section: "Verse 1", text: "This is amazing grace, this is unfailing love\n\nNext line I can't remember yeahhhh"},
-                data: "This is ignored because its not part of the struct"
             })
         } else {
             verse = 1
             Display.SetData({
                 type: "song", 
                 meta: {section: "Verse 2", text: "Who brings our chaos back into order\n\nWho makes the orphan a son and daughter"},
-                data: "This is ignored because its not part of the struct"
             })
         }
     }, 5000)
