@@ -6,6 +6,11 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+<<<<<<< HEAD
 export function LoadSong() {
   return window['go']['main']['App']['LoadSong']();
+=======
+export function Startup(arg1) {
+  return window['go']['main']['App']['Startup'](arg1);
+>>>>>>> cae5a02f0025f260553a71340ed024f5b5730628
 }
