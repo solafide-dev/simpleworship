@@ -4,6 +4,8 @@ import './index.css';
 import App from './App';
 import { SlideshowProvider } from './context/SlideshowContext';
 import '@fontsource-variable/inter';
+import Display from './Display';
+import './offscreenCanvasPolyfill.js'
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
