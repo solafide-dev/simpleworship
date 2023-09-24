@@ -139,19 +139,23 @@ function Display({ lyrics }: { lyrics: string }) {
                 const imageData = await offscreenCanvas.transferToImageBitmap()
                 lastSlide = imageData
 
-                let i = 0
+                if (style.transition) {
+                    let i = 0
 
-                const loop = () => {
-                    i++
+                    const loop = () => {
+                        i++
 
-                    if (i < 100) {
-                        ctx.globalAlpha = i / 100
-                        ctx.drawImage(imageData, 0, 0)
-                        window.requestAnimationFrame(loop)
+                        if (i < 100) {
+                            ctx.globalAlpha = i / 100
+                            ctx.drawImage(imageData, 0, 0)
+                            window.requestAnimationFrame(loop)
+                        }
                     }
-                }
 
-                window.requestAnimationFrame(loop)
+                    window.requestAnimationFrame(loop)
+                } else {
+                    ctx.drawImage(imageData, 0, 0)
+                }
             })()
         }
 

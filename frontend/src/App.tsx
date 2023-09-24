@@ -47,16 +47,13 @@ function App() {
         }, 3000)
     })
 
-    return <Display lyrics={lyrics} />
-
-
     return (
         <div className='bg-gray-900 h-screen p-3 flex flex-col gap-2'>
             <div className='flex gap-2 overflow-hidden'>
                 <div className='w-[350px] flex flex-col gap-2'>
                     <div>
                         <div className='bg-black rounded w-full aspect-video overflow-hidden'>
-                            <Display lyrics={"There is a Redeemer\nJesus, God's own son."} />
+                            <Display lyrics={lyrics} />
                         </div>
                     </div>
                     <div className='flex gap-2'>
@@ -145,7 +142,7 @@ function App() {
                                             <div className={`text-xs px-1.5 pt-1 rounded-t text-bold ${i == 0 && j == 0 ? 'text-gray-200' : 'text-gray-400'}`}>Verse 1</div>
                                             <div className='p-1'>
                                                 <div className='bg-black rounded w-full aspect-video overflow-hidden'>
-                                                    <Display lyrics={lyrics} />
+                                                    <Display lyrics={"There is a redeemer\nJesus, God's own son"} />
                                                 </div>
                                             </div>
                                         </button>
