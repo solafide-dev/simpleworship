@@ -21,11 +21,13 @@ import (
 //go:embed frontend-display
 var displayServerFrontend embed.FS
 
+// DisplayServerData represents the data for a single slide
 type DisplayServerData struct {
 	Type string                 `json:"type"`
 	Meta map[string]interface{} `json:"meta"`
 }
 
+// DisplayServer represents the display server
 type DisplayServer struct {
 	ctx      context.Context
 	server   *http.Server
@@ -33,6 +35,7 @@ type DisplayServer struct {
 	dataChan chan map[int]DisplayServerData
 }
 
+// NewDisplayServer creates a new DisplayServer
 func NewDisplayServer() *DisplayServer {
 	return &DisplayServer{
 		data:     make(map[int]DisplayServerData),
@@ -40,19 +43,25 @@ func NewDisplayServer() *DisplayServer {
 	}
 }
 
+// SetData sets the data for the display server
+// TODO: Make this handle setting multiple slides
 func (d *DisplayServer) SetData(data DisplayServerData) {
 	rt.LogDebug(d.ctx, "DisplayServer.SetData called")
 	d.data[0] = data
 	d.dataChan <- map[int]DisplayServerData{0: data}
 }
 
+// startup is called at application startup and initializes the display server
 func (d *DisplayServer) startup(ctx context.Context) {
 	d.ctx = ctx
 
 	go d.ssdpInit()
 
+	// Define Router
 	router := mux.NewRouter()
 
+	// Setup static content servering for the display server frontend
+	// these files are embedded in the binary
 	var frontendFS = fs.FS(displayServerFrontend)
 	staticContent, err := fs.Sub(frontendFS, "frontend-display/dist")
 	if err != nil {
@@ -62,11 +71,9 @@ func (d *DisplayServer) startup(ctx context.Context) {
 	httpfs := http.FileServer(http.FS(staticContent))
 	router.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", httpfs))
 
-	var upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-
+	// Websocket client handling
+	// Each new connection is added to the map,
+	// and dataChan updates are sent to each client
 	var clients = make(map[string]*websocket.Conn)
 
 	// watch the dataBus for changes, and send the data to the client
@@ -88,6 +95,11 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		}
 	}()
 
+	// Websocket Route, handles websocket connections
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 		ws, err := upgrader.Upgrade(w, r, nil)
@@ -119,6 +131,7 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		}()
 	})
 
+	// Data route, returns the current data as JSON
 	router.HandleFunc("/data", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -127,68 +140,17 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		w.Write(marshaledData)
 	}).Methods("GET")
 
-	/*router.HandleFunc("/data-events", func(w http.ResponseWriter, r *http.Request) {
-		flusher, ok := w.(http.Flusher)
-		if !ok {
-			rt.LogError(d.ctx, "SSE not supported")
-			http.Error(w, "SSE not supported", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		// listens to change to the data channel, and writes the data to the response writer
-		for dataMap := range d.dataChan {
-			data := dataMap[0]
-			rt.LogDebugf(d.ctx, "DisplayServer.dataChan: %s", data)
-
-			m := map[string]any{"data": data}
-
-			buff := bytes.NewBuffer([]byte{})
-			encoder := json.NewEncoder(buff)
-			err := encoder.Encode(m)
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
-			sb := strings.Builder{}
-			sb.WriteString(fmt.Sprintf("event: %s\n", "data-update"))
-			sb.WriteString(fmt.Sprintf("data: %v\n", buff.String()))
-			event := sb.String()
-
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
-			_, err = fmt.Fprint(w, event)
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
-			flusher.Flush()
-		}
-	})*/
-
+	// Root route, just servers index.html
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
-		//marshaledMeta, _ := json.Marshal(d.data.Meta)
-
-		// load index.html
 		index, err := displayServerFrontend.ReadFile("frontend-display/index.html")
 		if err != nil {
 			rt.LogErrorf(d.ctx, "Error: %e", err)
 		}
 
 		w.Write(index)
-
 	}).Methods("GET")
 
+	// Define the server
 	d.server = &http.Server{
 		Addr:    ":7777",
 		Handler: router,
@@ -202,10 +164,13 @@ func (d *DisplayServer) startup(ctx context.Context) {
 	}()
 }
 
+// shutdown is called at application termination
 func (d *DisplayServer) shutdown(ctx context.Context) {
 	d.server.Shutdown(ctx)
 }
 
+// ssdpInit initializes the SSDP server
+// TODO: Add this to the display server struct and handle shutdown properly
 func (d *DisplayServer) ssdpInit() {
 	rt.LogInfo(d.ctx, "ssdp init")
 
@@ -244,6 +209,7 @@ loop:
 	ad.Close()
 }
 
+// getOutboundIP gets the outbound IP address (local IP address) to use with SSDP messages
 func (d *DisplayServer) getOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
