@@ -9,6 +9,7 @@ The end goal here  is a simple, easy to use, and free church presentation softwa
 ## Our Motivation
 
 This project was started for two main reasons:
+
 - We were tired of walled garden, proprietary and hard to interact with software for churches.
   - As the "technology people" at our churches, we want to be able to automate and simplify workflows, and make it extremely easy for volenteers to
     use the software.
