@@ -7,6 +7,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/koron/go-ssdp v0.0.4
+	github.com/simpleworship/gobible v0.1.0
 	github.com/wailsapp/wails/v2 v2.6.0
 )
 
