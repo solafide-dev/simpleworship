@@ -1,21 +1,19 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"embed"
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/koron/go-ssdp"
 	rt "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -37,12 +35,13 @@ type DisplayServer struct {
 
 func NewDisplayServer() *DisplayServer {
 	return &DisplayServer{
+		data:     make(map[int]DisplayServerData),
 		dataChan: make(chan map[int]DisplayServerData),
 	}
 }
 
 func (d *DisplayServer) SetData(data DisplayServerData) {
-	rt.LogDebugf(d.ctx, "DisplayServer.SetData: %s", data)
+	rt.LogDebug(d.ctx, "DisplayServer.SetData called")
 	d.data[0] = data
 	d.dataChan <- map[int]DisplayServerData{0: data}
 }
@@ -50,20 +49,75 @@ func (d *DisplayServer) SetData(data DisplayServerData) {
 func (d *DisplayServer) startup(ctx context.Context) {
 	d.ctx = ctx
 
-	sentStartEvent := false
-
 	go d.ssdpInit()
 
 	router := mux.NewRouter()
 
 	var frontendFS = fs.FS(displayServerFrontend)
-	staticContent, err := fs.Sub(frontendFS, "frontend-display/src")
+	staticContent, err := fs.Sub(frontendFS, "frontend-display/dist")
 	if err != nil {
 		rt.LogErrorf(d.ctx, "Error: %e", err)
 	}
 
 	httpfs := http.FileServer(http.FS(staticContent))
-	router.PathPrefix("/src/").Handler(http.StripPrefix("/src/", httpfs))
+	router.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", httpfs))
+
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	var clients = make(map[string]*websocket.Conn)
+
+	// watch the dataBus for changes, and send the data to the client
+	go func() {
+		for dataMap := range d.dataChan {
+			data := dataMap[0]
+			rt.LogDebug(d.ctx, "DisplayServer.dataChan updated")
+
+			marshaledData, _ := json.Marshal(data)
+
+			for uuid, ws := range clients {
+				rt.LogDebugf(d.ctx, "Sending data to client %s", uuid)
+				err := ws.WriteMessage(websocket.TextMessage, marshaledData)
+				if err != nil {
+					rt.LogErrorf(d.ctx, "Error: %e", err)
+					return
+				}
+			}
+		}
+	}()
+
+	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			rt.LogErrorf(d.ctx, "Error: %e", err)
+		}
+
+		id := uuid.New().String()
+		clients[id] = ws // add client to clients map
+
+		rt.LogInfof(d.ctx, "New Websocket client connected: %s", id)
+
+		// when a message is received, do something with it
+		go func() {
+			for {
+				// TODO: Make this more robust, probably.
+				_, msg, err := ws.ReadMessage()
+				if err != nil {
+					// websocket: close 1001 (going away): goodbye
+					if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+						rt.LogErrorf(d.ctx, "Error: %v", err)
+					}
+					rt.LogInfof(d.ctx, "Websocket client disconnected: %s", id)
+					delete(clients, id) // yeet the client from the clients map
+					return
+				}
+				rt.LogInfof(d.ctx, "ws message: %s", msg)
+			}
+		}()
+	})
 
 	router.HandleFunc("/data", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -73,7 +127,7 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		w.Write(marshaledData)
 	}).Methods("GET")
 
-	router.HandleFunc("/data-events", func(w http.ResponseWriter, r *http.Request) {
+	/*router.HandleFunc("/data-events", func(w http.ResponseWriter, r *http.Request) {
 		flusher, ok := w.(http.Flusher)
 		if !ok {
 			rt.LogError(d.ctx, "SSE not supported")
@@ -85,16 +139,6 @@ func (d *DisplayServer) startup(ctx context.Context) {
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		if !sentStartEvent {
-			sentStartEvent = true
-			sb := strings.Builder{}
-			sb.WriteString(fmt.Sprintf("event: %s\n", "data-app-start"))
-			sb.WriteString(fmt.Sprintf("data: %v\n\n", ""))
-			event := sb.String()
-			_, err = fmt.Fprint(w, event)
-			flusher.Flush()
-		}
 
 		// listens to change to the data channel, and writes the data to the response writer
 		for dataMap := range d.dataChan {
@@ -113,7 +157,7 @@ func (d *DisplayServer) startup(ctx context.Context) {
 
 			sb := strings.Builder{}
 			sb.WriteString(fmt.Sprintf("event: %s\n", "data-update"))
-			sb.WriteString(fmt.Sprintf("data: %v\n\n", buff.String()))
+			sb.WriteString(fmt.Sprintf("data: %v\n", buff.String()))
 			event := sb.String()
 
 			if err != nil {
@@ -129,7 +173,7 @@ func (d *DisplayServer) startup(ctx context.Context) {
 
 			flusher.Flush()
 		}
-	})
+	})*/
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
