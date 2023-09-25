@@ -39,5 +39,39 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+	return fmt.Sprintf("Hello %s, It's YO time!", name)
+}
+
+type Slide struct {
+	Section string `json:"section"`
+	Text    string `json:"text"`
+}
+
+type Meta struct {
+	Title  string `json:"title"`
+	Artist string `json:"artist"`
+}
+
+type Song struct {
+	Meta   Meta    `json:"meta"`
+	Slides []Slide `json:"slides"`
+}
+
+func (a *App) LoadSong() Song {
+	return Song{
+		Meta: Meta{
+			Title:  "There Is a Redeemer",
+			Artist: "Keith Green",
+		},
+		Slides: []Slide{
+			{
+				Section: "verse 1",
+				Text:    "There is a redeemer\nJesus, God's own Son",
+			},
+			{
+				Section: "verse 1",
+				Text:    "Precious Lamb of God, Messiah\nHoly One",
+			},
+		},
+	}
 }

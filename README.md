@@ -1,5 +1,8 @@
 # Simple Worship
 
+<img width="1506" alt="simpleworship" src="https://github.com/simpleworship/simpleworship/assets/262524/79e5453f-a752-4914-8b07-17ca1c7de8b6">
+
+
 A wails / React based application for in-church display.
 
 This software is still in active development, and is not yet ready for production use.
@@ -16,6 +19,11 @@ This project was started for two main reasons:
   - We wanted flexibility and cost savings whenever possible, not relying on proprietary software to have the feature we want, but instead having the ability to, with a little time, add it ourselves.
 - We felt compelled to use our tallents to serve the local church, and this is one way we can do that.
 
+# Usage
+
+Run it and use it (REPLACE THIS WITH BETTER README)
+
+You will also need a Display Application. If you plan to use SimpleWorship in a normal configuration (with a projector or TV hooked directly to the same machine) we suggest using [Simple Worship Display](https://github.com/solafide-dev/simpleworship-display)
 
 ## Development
 

@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/simpleworship/gobible"
-	"github.com/simpleworship/gobible/bible"
+	"github.com/solafide-dev/gobible"
+	"github.com/solafide-dev/gobible/bible"
 	rt "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
