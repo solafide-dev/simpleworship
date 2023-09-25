@@ -16,7 +16,7 @@ This project was started for two main reasons:
   - We wanted flexibility and cost savings whenever possible, not relying on proprietary software to have the feature we want, but instead having the ability to, with a little time, add it ourselves.
 - We felt compelled to use our tallents to serve the local church, and this is one way we can do that.
 
-# Ussage
+# Usage
 
 Run it and use it (REPLACE THIS WITH BETTER README)
 
