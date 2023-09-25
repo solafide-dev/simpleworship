@@ -20,7 +20,7 @@ This project was started for two main reasons:
 
 Run it and use it (REPLACE THIS WITH BETTER README)
 
-You will also need a Display Application. If you plan to use SimpleWorship in a normal configuration (with a projector or TV hooked directly to the same machine) we suggest using [Simple Worship Display](https://github.com/simpleworship/simpleworship-display)
+You will also need a Display Application. If you plan to use SimpleWorship in a normal configuration (with a projector or TV hooked directly to the same machine) we suggest using [Simple Worship Display](https://github.com/solafide-dev/simpleworship-display)
 
 ## Development
 
