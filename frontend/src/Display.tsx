@@ -35,6 +35,7 @@ function Display({ lyrics }: { lyrics: string }) {
             // image: 'ParticleSpinPinkSlowHD.jpg',
             margin: 4
         },
+        transition: null, // TODO: Quick patch for build. @michaelpanik fix this.
         text: {
             color: "#111111",
             size: 3,

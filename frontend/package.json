@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.0.8",
+    "@types/offscreencanvas": "^2019.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.11.0"

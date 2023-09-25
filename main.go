@@ -16,7 +16,7 @@ import (
 var assets embed.FS
 
 //go:embed build/appicon.png
-// var icon []byte
+var icon []byte
 
 func main() {
 	// setup display server (this is very temporary and just for proof of concept)
