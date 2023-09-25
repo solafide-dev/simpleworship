@@ -1,5 +1,8 @@
 # Simple Worship
 
+<img width="1506" alt="simpleworship" src="https://github.com/simpleworship/simpleworship/assets/262524/79e5453f-a752-4914-8b07-17ca1c7de8b6">
+
+
 A wails / React based application for in-church display.
 
 This software is still in active development, and is not yet ready for production use.
