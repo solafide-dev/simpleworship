@@ -16,7 +16,7 @@ import (
 var assets embed.FS
 
 //go:embed build/appicon.png
-var icon []byte
+// var icon []byte
 
 func main() {
 	// setup display server (this is very temporary and just for proof of concept)
@@ -28,12 +28,17 @@ func main() {
 
 	AppMenu := menu.NewMenu()
 	FileMenu := AppMenu.AddSubmenu("File")
-	//FileMenu.AddText("&Open", keys.CmdOrCtrl("o"), openFile)
-	//FileMenu.AddSeparator()
+	FileMenu.AddText("Open", keys.CmdOrCtrl("o"), nil)
+	FileMenu.AddText("Settings", keys.CmdOrCtrl(","), nil)
+	FileMenu.AddSeparator()
 	FileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
 		rt.Quit(app.ctx)
 	})
-
+	PluginsMenu := AppMenu.AddSubmenu("Plugins")
+	PluginsMenu.AddSeparator()
+	PluginsMenu.AddText("Manage Plugins", nil, nil)
+	HelpMenu := AppMenu.AddSubmenu("Help")
+	HelpMenu.AddText("User's Guide", nil, nil)
 	if runtime.GOOS == "darwin" {
 		AppMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
 	}
@@ -41,8 +46,8 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:            "Simple Worship",
-		Width:            1024,
-		Height:           768,
+		WindowStartState: options.Maximised,
+		MaxWidth:         99999,
 		Assets:           assets,
 		Menu:             AppMenu,
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
