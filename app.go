@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 )
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx       context.Context
+	DataStore *DataStore
 }
 
 // NewApp creates a new App application struct
@@ -16,8 +16,9 @@ func NewApp() *App {
 }
 
 // startup is called at application startup
-func (a *App) Startup(ctx context.Context) {
+func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.DataStore = NewDataStore(ctx)
 }
 
 // domReady is called after front-end resources have been loaded
@@ -37,9 +38,14 @@ func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's YO time!", name)
+func (a *App) GetDataStore() *DataStore {
+	return a.DataStore
+}
+
+// Get song from DataStore.
+// For some reason wails doesn't generate functions for structs that are not
+func (a *App) GetSong(id string) (Song, error) {
+	return a.DataStore.GetSong(id)
 }
 
 type Slide struct {

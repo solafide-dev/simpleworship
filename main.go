@@ -18,8 +18,6 @@ var assets embed.FS
 //go:embed build/appicon.png
 var icon []byte
 
-var dataStore *DataStore
-
 func main() {
 	// setup display server (this is very temporary and just for proof of concept)
 	// go startDisplayServer()
@@ -54,8 +52,7 @@ func main() {
 		Menu:             AppMenu,
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup: func(ctx context.Context) {
-			dataStore = InitDataStore(ctx)
-			app.Startup(ctx)
+			app.startup(ctx)
 			displayServer.startup(ctx)
 		},
 		OnShutdown: func(ctx context.Context) {

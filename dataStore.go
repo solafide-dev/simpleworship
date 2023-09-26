@@ -4,13 +4,12 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/fs"
 	"os"
-	"strings"
 
-	"github.com/solafide-dev/gobible"
-	"github.com/solafide-dev/gobible/bible"
+	"github.com/fsnotify/fsnotify"
 	rt "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -26,6 +25,12 @@ type OrderOfService struct {
 }
 
 type ServiceItemType string
+
+var WatchDirectories = []string{
+	"./storage/services",
+	"./storage/songs",
+	"./storage/bibles",
+}
 
 const (
 	SongServiceItemType      ServiceItemType = "song"
@@ -74,61 +79,10 @@ type ScriptureServiceItem struct {
 type DataStore struct {
 	OrderOfServices []OrderOfService `json:"services"`
 	Songs           []Song           `json:"songs"`
-	Bibles          []*bible.Bible   `json:"bibles"`
+	//Bibles          []*bible.Bible   `json:"bibles"`
 }
 
-//go:embed all:default_storage
-var defaultStorage embed.FS
-
-func InitDataStore(ctx context.Context) *DataStore {
-	checkStorage(ctx)
-
-	// load bibles from storage/bibles
-	bibles := []*bible.Bible{}
-	bibleFiles, err := os.ReadDir("./storage/bibles")
-	if err != nil {
-		rt.LogError(ctx, err.Error())
-	}
-	for _, bibleFile := range bibleFiles {
-		bibleName := bibleFile.Name()
-		// TODO: Update Gobible to add a loader function that does this
-		if strings.HasSuffix(bibleName, ".json") {
-			bible := gobible.New("./storage/bibles/" + bibleName)
-			bibles = append(bibles, bible)
-		}
-		if strings.HasSuffix(bibleName, ".osis") {
-			bible := gobible.NewOSIS("./storage/bibles/" + bibleName)
-			bibles = append(bibles, bible)
-		}
-	}
-
-	songFiles, err := os.ReadDir("./storage/songs")
-	if err != nil {
-		rt.LogError(ctx, err.Error())
-	}
-	songs := []Song{}
-	for _, songFile := range songFiles {
-		// parse each file as a song
-		song := Song{}
-		// open the file
-		file, err := os.Open("./storage/songs/" + songFile.Name())
-		if err != nil {
-			rt.LogError(ctx, err.Error())
-			continue
-		}
-		defer file.Close()
-
-		// decode the file
-		err = json.NewDecoder(file).Decode(&song)
-		if err != nil {
-			rt.LogError(ctx, err.Error())
-			continue
-		}
-
-		// add the song to the list of songs
-		songs = append(songs, song)
-	}
-
+func (d *DataStore) loadOrderOfServiceData(ctx context.Context) {
 	serviceFiles, err := os.ReadDir("./storage/services")
 	if err != nil {
 		rt.LogError(ctx, err.Error())
@@ -156,12 +110,145 @@ func InitDataStore(ctx context.Context) *DataStore {
 		services = append(services, service)
 	}
 
-	return &DataStore{
-		OrderOfServices: services,
-		Songs:           songs,
-		Bibles:          bibles,
-	}
+	d.OrderOfServices = services
 }
+
+func (d *DataStore) loadSongData(ctx context.Context) {
+	songFiles, err := os.ReadDir("./storage/songs")
+	if err != nil {
+		rt.LogError(ctx, err.Error())
+	}
+	songs := []Song{}
+	for _, songFile := range songFiles {
+		// parse each file as a song
+		song := Song{}
+		// open the file
+		file, err := os.Open("./storage/songs/" + songFile.Name())
+		if err != nil {
+			rt.LogError(ctx, err.Error())
+			continue
+		}
+		defer file.Close()
+
+		// decode the file
+		err = json.NewDecoder(file).Decode(&song)
+		if err != nil {
+			rt.LogError(ctx, err.Error())
+			continue
+		}
+
+		// add the song to the list of songs
+		songs = append(songs, song)
+	}
+	d.Songs = songs
+}
+
+/*func (d *DataStore) loadBibleData(ctx context.Context) {
+	// load bibles from storage/bibles
+	bibles := []*bible.Bible{}
+	bibleFiles, err := os.ReadDir("./storage/bibles")
+	if err != nil {
+		rt.LogError(ctx, err.Error())
+	}
+	for _, bibleFile := range bibleFiles {
+		bibleName := bibleFile.Name()
+		// TODO: Update Gobible to add a loader function that does this
+		if strings.HasSuffix(bibleName, ".json") {
+			bible := gobible.New("./storage/bibles/" + bibleName)
+			bibles = append(bibles, bible)
+		}
+		if strings.HasSuffix(bibleName, ".osis") {
+			bible := gobible.NewOSIS("./storage/bibles/" + bibleName)
+			bibles = append(bibles, bible)
+		}
+	}
+	d.Bibles = bibles
+}*/
+
+func (d *DataStore) monitorFiles(ctx context.Context) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		rt.LogError(ctx, err.Error())
+	}
+	defer watcher.Close()
+
+	// Start listening for events.
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				rt.LogDebugf(ctx, "event: %v", event)
+				if event.Has(fsnotify.Write) {
+					//log.Println("modified file:", event.Name)
+					rt.LogInfof(ctx, "[DATASTORE] Reloading data from %s", event.Name)
+				}
+				if event.Has(fsnotify.Create) {
+					//log.Println("created file:", event.Name)
+					rt.LogInfof(ctx, "[DATASTORE] Loading new data from %s", event.Name)
+				}
+				if event.Has(fsnotify.Remove) {
+					//log.Println("removed file:", event.Name)
+					rt.LogInfof(ctx, "[DATASTORE] Removing data for %s", event.Name)
+					// BUT HOW? HOW WILL I KNOW WHAT TO REMOVE?
+					// PROBABLY JUST NEED A FULL RELOAD SADLY.
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				rt.LogError(ctx, err.Error())
+			}
+		}
+	}()
+
+	for _, directory := range WatchDirectories {
+		// Add a path.
+		err = watcher.Add(directory)
+		if err != nil {
+			rt.LogError(ctx, err.Error())
+		}
+	}
+
+	// Block main goroutine forever.
+	<-make(chan struct{})
+}
+
+func (d *DataStore) GetOrderOfService(id string) (OrderOfService, error) {
+	for _, service := range d.OrderOfServices {
+		if service.Id == id {
+			return service, nil
+		}
+	}
+	return OrderOfService{}, errors.New("service not found")
+}
+
+func (d *DataStore) GetSong(id string) (Song, error) {
+	for _, song := range d.Songs {
+		if song.Id == id {
+			return song, nil
+		}
+	}
+	return Song{}, errors.New("song not found")
+}
+
+func NewDataStore(ctx context.Context) *DataStore {
+	checkStorage(ctx)
+
+	dataStore := &DataStore{}
+	dataStore.loadOrderOfServiceData(ctx)
+	dataStore.loadSongData(ctx)
+	//dataStore.loadBibleData(ctx)
+
+	go dataStore.monitorFiles(ctx)
+
+	return dataStore
+}
+
+//go:embed all:default_storage
+var defaultStorage embed.FS
 
 // checkStorage checks if the storage folder exists, and if not, creates it and copies the default data to it
 // currently default data can only be 1 folder deep with this checking logic

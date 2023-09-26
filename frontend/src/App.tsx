@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
+import {main} from "../wailsjs/go/models"
 import { Playlist } from './components/Playlist';
 import { SlideshowContext } from './context/SlideshowContext';
 import { nextSlide, prevSlide } from './context/SlideshowContext/actions';
-import { LoadSong } from "../wailsjs/go/main/App"
+import { LoadSong, GetDataStore, GetSong } from "../wailsjs/go/main/App"
 import { Song } from './global';
 import { RiSlideshow4Line, RiStackLine, RiBookOpenLine, RiSettings5Line, RiPencilLine, RiAddLine, RiMusic2Line, RiVideoLine, RiMenuLine, RiCloseCircleFill, RiIndeterminateCircleFill, RiSkipForwardLine, RiSkipBackLine } from 'react-icons/ri'
 import Display from './Display';
@@ -23,6 +24,19 @@ function App() {
             dispatch(prevSlide())
         }
     }
+
+    /* garbage test code */
+    /*GetDataStore().then((dataStore: main.DataStore) => {
+        console.log(dataStore)
+        dataStore.GetSong("o-come-all-ye-faithful").then((song: Song) => {
+            console.log(song)
+        })
+    })*/
+    GetSong("o-come-all-ye-faithful").then((song: main.Song) => {
+        console.log(song)
+    })
+
+    /* end garbage test code */
 
     const handleClick = async () => {
         const song = await LoadSong()
