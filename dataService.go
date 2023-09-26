@@ -17,23 +17,19 @@ const (
 
 // ServiceItem represents a single item in an Order of Service.
 type ServiceItem struct {
-	Title string          `json:"title"` // Title of the item
-	Type  ServiceItemType `json:"type"`  // Song, Scripture, etc.
+	Title string          `json:"title"`          // Title of the item
+	Type  ServiceItemType `json:"type"`           // Song, Scripture, etc.
+	Meta  ServiceItemMeta `json:"meta,omitempty"` // Meta data for the item
 }
 
-// SongServiceItem represents a single song in an Order of Service.
-type SongServiceItem struct {
-	ServiceItem
-	SongId string `json:"songId"` // UUID
+type ServiceItemMeta struct {
+	// Song Meta
+	SongId string `json:"songId,omitempty"`
+	// Scripture Meta
+	VerseReference string `json:"verseReference,omitempty"`
 }
 
-// Scripture represents a single scripture.
-// TODO: Integrate with GoBible
-type ScriptureServiceItem struct {
-	ServiceItem
-	Reference string `json:"reference"` // Reference to the scripture
-}
-
+// SongServiceItem represents a single song in an Order of Service
 // OrderOfService represents a single Order of Service.
 // This of this as a single "slide show" that contains everything for a single day's service.
 type OrderOfService struct {
@@ -57,6 +53,7 @@ func (o *OrderOfService) ReloadFile() error {
 		return err
 	}
 
+	dataMutationEvent(o.ctx, "update", "OrderOfService", o.Id)
 	return nil
 }
 

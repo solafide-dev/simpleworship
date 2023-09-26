@@ -45,8 +45,8 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:            "Simple Worship",
-		WindowStartState: options.Maximised,
+		Title: "Simple Worship",
+		//WindowStartState: options.Maximised,
 		MaxWidth:         99999,
 		Assets:           assets,
 		Menu:             AppMenu,

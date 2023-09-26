@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/google/uuid"
@@ -18,6 +19,7 @@ import (
 
 // Datafile is the base for the different types of data files
 // It contains the ID and the filename of the file
+
 type DataFile struct {
 	ctx      context.Context `json:"-"`
 	typeName string          `json:"-"`
@@ -30,6 +32,45 @@ type DataStore struct {
 	OrderOfServices []OrderOfService `json:"services"`
 	Songs           []Song           `json:"songs"`
 	//Bibles          []*bible.Bible   `json:"bibles"`
+}
+
+type DataMutationEvent struct {
+	Type     string `json:"type"`     // update, delete, create
+	DataType string `json:"dataType"` // OrderOfService, Song
+	Id       string `json:"id"`
+}
+
+func dataMutationEvent(ctx context.Context, t, dataType, id string) {
+	rt.LogDebug(ctx, "[DATA MUTATION EVENT] "+t+" "+dataType+" "+id)
+	data := DataMutationEvent{
+		Type:     t,
+		DataType: dataType,
+		Id:       id,
+	}
+	rt.EventsEmit(ctx, "data-mutate", data)
+}
+
+func (d *DataStore) HandleFileDelete(t string, filename string) {
+	rt.LogDebug(d.ctx, "[DATAFILE DELETED] "+t+" file "+filename+" was deleted. Removing its data.")
+
+	switch t {
+	case `OrderOfService`:
+		for i, service := range d.OrderOfServices {
+			if service.Filename == filename {
+				d.OrderOfServices = append(d.OrderOfServices[:i], d.OrderOfServices[i+1:]...)
+				dataMutationEvent(d.ctx, "delete", t, service.Id)
+				return
+			}
+		}
+	case `Song`:
+		for i, song := range d.Songs {
+			if song.Filename == filename {
+				d.Songs = append(d.Songs[:i], d.Songs[i+1:]...)
+				dataMutationEvent(d.ctx, "delete", t, song.Id)
+				return
+			}
+		}
+	}
 }
 
 func (d *DataStore) LoadDataFile(t string, filename string) error {
@@ -64,12 +105,15 @@ func (d *DataStore) LoadDataFile(t string, filename string) error {
 				return err
 			}
 		}
+
 		for i, service := range d.OrderOfServices {
 			if service.Id == newData.Id {
 				d.OrderOfServices[i] = newData
+				dataMutationEvent(d.ctx, "update", "OrderOfService", newData.Id)
 				return nil
 			}
 		}
+		dataMutationEvent(d.ctx, "create", "OrderOfService", newData.Id)
 		d.OrderOfServices = append(d.OrderOfServices, newData)
 	case `Song`:
 		newData := Song{}
@@ -92,9 +136,11 @@ func (d *DataStore) LoadDataFile(t string, filename string) error {
 		for i, song := range d.Songs {
 			if song.Id == newData.Id {
 				d.Songs[i] = newData
+				dataMutationEvent(d.ctx, "update", "Song", newData.Id)
 				return nil
 			}
 		}
+		dataMutationEvent(d.ctx, "create", "Song", newData.Id)
 		d.Songs = append(d.Songs, newData)
 	}
 
@@ -170,21 +216,28 @@ func (d *DataStore) monitorFiles() {
 				if !ok {
 					return
 				}
-				rt.LogDebugf(d.ctx, "event: %v", event)
+				//rt.LogDebugf(d.ctx, "event: %v", event)
+
+				filename := strings.Replace(event.Name, "\\", "/", -1) // windows support
+
+				dataType := getFileDataType(filename)
+				if dataType == "" {
+					continue
+				}
+
+				if event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove) {
+					// rename events are followed up by create events, so find the
+					d.HandleFileDelete(dataType, filename)
+				}
 				if event.Has(fsnotify.Write) {
-					//log.Println("modified file:", event.Name)
-					rt.LogInfof(d.ctx, "[DATASTORE] Reloading data from %s", event.Name)
+					//log.Println("modified file:", filename)
+					rt.LogInfof(d.ctx, "[DATASTORE] Reloading data from %s", filename)
+					d.LoadDataFile(dataType, filename)
 				}
 				if event.Has(fsnotify.Create) {
-					//log.Println("created file:", event.Name)
-					rt.LogInfof(d.ctx, "[DATASTORE] Loading new data from %s", event.Name)
-				}
-				if event.Has(fsnotify.Remove) {
-					//log.Println("removed file:", event.Name)
-					rt.LogInfof(d.ctx, "[DATASTORE] Removing data for %s", event.Name)
-					// BUT HOW? HOW WILL I KNOW WHAT TO REMOVE?
-					// PROBABLY JUST NEED A FULL RELOAD SADLY.
-
+					//log.Println("created file:", filename)
+					rt.LogInfof(d.ctx, "[DATASTORE] Loading new data from %s", filename)
+					d.LoadDataFile(dataType, filename)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -215,6 +268,22 @@ func (d *DataStore) init(ctx context.Context) {
 	//d.loadBibleData(ctx)
 
 	go d.monitorFiles()
+}
+
+func getFileDataType(filename string) string {
+	// if filename contains "services" return "OrderOfService"
+	if strings.Contains(filename, "/services/") {
+		return "OrderOfService"
+	}
+	// if filename contains "songs" return "Song"
+	if strings.Contains(filename, "/songs/") {
+		return "Song"
+	}
+	// if filename contains "bibles" return "Bible"
+	if strings.Contains(filename, "/bibles/") {
+		return "Bible"
+	}
+	return ""
 }
 
 //go:embed all:default_storage

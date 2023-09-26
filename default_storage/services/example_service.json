@@ -9,7 +9,9 @@
         {
             "type": "song",
             "title": "O Come All Ye Faithful",
-            "songId": "o-come-all-ye-faithful"
+            "meta": {
+                "songId": "o-come-all-ye-faithful"
+            }
         },
         {
             "title": "Sermon",
@@ -18,7 +20,9 @@
         {
             "type": "scripture",
             "title": "John 3:16",
-            "reference": "John 3:16 WEB"
+            "meta": {
+                "verseReference": "John 3:16 WEB"
+            }
         }
     ]
 }

@@ -65,6 +65,8 @@ func (s *Song) SaveFile() error {
 		return err
 	}
 
+	dataMutationEvent(s.ctx, "update", "Song", s.Id)
+
 	rt.LogDebug(s.ctx, "[DATAFILE SAVE] Saved "+s.Filename)
 	return nil
 }
