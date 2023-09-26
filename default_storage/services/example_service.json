@@ -1,0 +1,24 @@
+{
+    "title": "Example Order of Service",
+    "date": "2019-01-01",
+    "items": [
+        {
+            "title": "Worship",
+            "type": "category"
+        },
+        {
+            "type": "song",
+            "title": "O Come All Ye Faithful",
+            "songId": "o-come-all-ye-faithful"
+        },
+        {
+            "title": "Sermon",
+            "type": "category"
+        },
+        {
+            "type": "scripture",
+            "title": "John 3:16",
+            "reference": "John 3:16 WEB"
+        }
+    ]
+}

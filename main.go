@@ -52,7 +52,7 @@ func main() {
 		Menu:             AppMenu,
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup: func(ctx context.Context) {
-			app.Startup(ctx)
+			app.startup(ctx)
 			displayServer.startup(ctx)
 		},
 		OnShutdown: func(ctx context.Context) {

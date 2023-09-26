@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"errors"
 )
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx       context.Context `json:"-"`
+	DataStore *DataStore      `json:"dataStore"`
 }
 
 // NewApp creates a new App application struct
@@ -16,8 +17,10 @@ func NewApp() *App {
 }
 
 // startup is called at application startup
-func (a *App) Startup(ctx context.Context) {
+func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.DataStore = &DataStore{}
+	a.DataStore.init(ctx)
 }
 
 // domReady is called after front-end resources have been loaded
@@ -37,9 +40,32 @@ func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's YO time!", name)
+func (a *App) GetSongs() []Song {
+	return a.DataStore.Songs
+}
+
+func (a *App) GetOrderOfServices() []OrderOfService {
+	return a.DataStore.OrderOfServices
+}
+
+// Get song from DataStore.
+func (a *App) GetSong(id string) (Song, error) {
+	for _, song := range a.DataStore.Songs {
+		if song.Id == id {
+			return song, nil
+		}
+	}
+	return Song{}, errors.New("song not found")
+}
+
+// Get order of service from DataStore.
+func (a *App) GetOrderOfService(id string) (OrderOfService, error) {
+	for _, service := range a.DataStore.OrderOfServices {
+		if service.Id == id {
+			return service, nil
+		}
+	}
+	return OrderOfService{}, errors.New("service not found")
 }
 
 type Slide struct {
@@ -52,13 +78,13 @@ type Meta struct {
 	Artist string `json:"artist"`
 }
 
-type Song struct {
+type SongSlide struct {
 	Meta   Meta    `json:"meta"`
 	Slides []Slide `json:"slides"`
 }
 
-func (a *App) LoadSong() Song {
-	return Song{
+func (a *App) LoadSong() SongSlide {
+	return SongSlide{
 		Meta: Meta{
 			Title:  "There Is a Redeemer",
 			Artist: "Keith Green",
