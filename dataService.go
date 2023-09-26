@@ -17,7 +17,6 @@ const (
 
 // ServiceItem represents a single item in an Order of Service.
 type ServiceItem struct {
-	Id    string          `json:"id"`    // UUID
 	Title string          `json:"title"` // Title of the item
 	Type  ServiceItemType `json:"type"`  // Song, Scripture, etc.
 }

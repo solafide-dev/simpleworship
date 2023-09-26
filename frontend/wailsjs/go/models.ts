@@ -29,7 +29,6 @@ export namespace main {
 	    }
 	}
 	export class ServiceItem {
-	    id: string;
 	    title: string;
 	    type: string;
 	
@@ -39,7 +38,6 @@ export namespace main {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.id = source["id"];
 	        this.title = source["title"];
 	        this.type = source["type"];
 	    }
