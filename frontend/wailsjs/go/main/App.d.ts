@@ -5,6 +5,6 @@ import {context} from '../models';
 
 export function Greet(arg1:string):Promise<string>;
 
-export function LoadSong():Promise<main.Song>;
+export function LoadSong():Promise<main.SongSlide>;
 
 export function Startup(arg1:context.Context):Promise<void>;

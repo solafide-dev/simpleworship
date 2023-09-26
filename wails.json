@@ -9,8 +9,5 @@
     "name": "Cameron Chunn",
     "email": "cameronchunn@gmail.com"
   },
-  "reloaddirs": "./frontend-display/src",
-  "preBuildHooks": {
-    "*/*": "bash ../../frontend-display/build-hook.sh"
-  }
+  "reloaddirs": "./frontend-display/src"
 }

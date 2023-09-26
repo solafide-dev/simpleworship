@@ -42,12 +42,12 @@ export namespace main {
 	        this.text = source["text"];
 	    }
 	}
-	export class Song {
+	export class SongSlide {
 	    meta: Meta;
 	    slides: Slide[];
 	
 	    static createFrom(source: any = {}) {
-	        return new Song(source);
+	        return new SongSlide(source);
 	    }
 	
 	    constructor(source: any = {}) {

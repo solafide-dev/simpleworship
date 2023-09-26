@@ -52,13 +52,13 @@ type Meta struct {
 	Artist string `json:"artist"`
 }
 
-type Song struct {
+type SongSlide struct {
 	Meta   Meta    `json:"meta"`
 	Slides []Slide `json:"slides"`
 }
 
-func (a *App) LoadSong() Song {
-	return Song{
+func (a *App) LoadSong() SongSlide {
+	return SongSlide{
 		Meta: Meta{
 			Title:  "There Is a Redeemer",
 			Artist: "Keith Green",
