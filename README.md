@@ -1,7 +1,5 @@
 # Simple Worship
-
-<img width="1506" alt="simpleworship" src="https://github.com/simpleworship/simpleworship/assets/262524/79e5453f-a752-4914-8b07-17ca1c7de8b6">
-
+<img width="1506" alt="simpleworship-transparent" src="https://github.com/solafide-dev/simpleworship/assets/262524/0db088a6-df2d-4fde-90a2-eccbf82197c8">
 
 A wails / React based application for in-church display.
 
