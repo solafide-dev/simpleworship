@@ -22,7 +22,7 @@ func (a *App) initAugust() {
 	a.Data.Run()
 }
 
-func (a *App) GetData(store, id string) (interface{}, error) {
+func (a *App) getData(store, id string) (interface{}, error) {
 	s, err := a.Data.GetStore(store)
 	if err != nil {
 		rt.LogError(a.ctx, err.Error())
@@ -72,7 +72,7 @@ func (a *App) GetOrderOfServices() []OrderOfService {
 
 // Get song from DataStore.
 func (a *App) GetSong(id string) (Song, error) {
-	song, err := a.GetData(Registry_Song, id)
+	song, err := a.getData(Registry_Song, id)
 	if err != nil {
 		return Song{}, err
 	}
@@ -82,7 +82,7 @@ func (a *App) GetSong(id string) (Song, error) {
 
 // Get order of service from DataStore.
 func (a *App) GetOrderOfService(id string) (OrderOfService, error) {
-	service, err := a.GetData(Registry_OrderOfService, id)
+	service, err := a.getData(Registry_OrderOfService, id)
 	if err != nil {
 		return OrderOfService{}, err
 	}
