@@ -3,16 +3,17 @@ module simpleworship
 go 1.18
 
 require (
-	github.com/fsnotify/fsnotify v1.6.0
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/koron/go-ssdp v0.0.4
+	github.com/solafide-dev/august v1.0.0
 	github.com/wailsapp/wails/v2 v2.6.0
 )
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
 	github.com/labstack/echo/v4 v4.10.2 // indirect
@@ -36,4 +37,5 @@ require (
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
