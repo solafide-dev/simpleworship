@@ -77,6 +77,7 @@ export namespace main {
 		}
 	}
 	export class OrderOfService {
+	    id: string;
 	    title: string;
 	    date: string;
 	    items: ServiceItem[];
@@ -87,6 +88,7 @@ export namespace main {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
 	        this.title = source["title"];
 	        this.date = source["date"];
 	        this.items = this.convertValues(source["items"], ServiceItem);
@@ -141,6 +143,7 @@ export namespace main {
 	    }
 	}
 	export class Song {
+	    id: string;
 	    title: string;
 	    attribution: string;
 	    license: string;
@@ -154,6 +157,7 @@ export namespace main {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
 	        this.title = source["title"];
 	        this.attribution = source["attribution"];
 	        this.license = source["license"];
