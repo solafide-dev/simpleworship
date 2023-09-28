@@ -19,6 +19,10 @@ type SongPart struct {
 	Lines []string `json:"lines"` // The actual lyrics
 }
 
+// TODO: The two methods on Song are not properly moved to Wails typescript yet.
+// Im not sure if this is a limitation of wails and we just need to arcetect differently,
+// or if I am doing something wrong.
+
 // Generate the SongML for a song.
 //
 // [Verse 1]

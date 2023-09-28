@@ -20,7 +20,7 @@ func NewApp() *App {
 // startup is called at application startup
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	a.initAugust()
+	a.initAugust() // Initialize our data storage system
 }
 
 // domReady is called after front-end resources have been loaded
