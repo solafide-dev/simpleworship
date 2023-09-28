@@ -26,6 +26,7 @@ type ServiceItemMeta struct {
 // OrderOfService represents a single Order of Service.
 // This of this as a single "slide show" that contains everything for a single day's service.
 type OrderOfService struct {
+	Id    string        `json:"-"`     // Unique ID of the item
 	Title string        `json:"title"` // Title of the Order of Service
 	Date  string        `json:"date"`  // Date of the Order of Service
 	Items []ServiceItem `json:"items"` // Items in the Order of Service

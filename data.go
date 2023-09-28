@@ -32,6 +32,7 @@ func (a *App) getData(store, id string) (interface{}, error) {
 	return s.Get(id)
 }
 
+// Get All Songs from DataStore.
 func (a *App) GetSongs() []Song {
 	store, err := a.Data.GetStore(Registry_Song)
 	if err != nil {
@@ -46,11 +47,42 @@ func (a *App) GetSongs() []Song {
 		if err != nil {
 			rt.LogError(a.ctx, err.Error())
 		}
-		songs = append(songs, song.(Song))
+		s := song.(Song)
+		s.Id = id
+		songs = append(songs, s)
 	}
 	return songs
 }
 
+// Get Song from DataStore.
+func (a *App) GetSong(id string) (Song, error) {
+	song, err := a.getData(Registry_Song, id)
+	if err != nil {
+		return Song{}, err
+	}
+
+	s := song.(Song)
+	s.Id = id
+
+	return s, nil
+}
+
+// Save a song to the datastore.
+func (a *App) SaveSong(song Song) (songId string, err error) {
+	store, err := a.Data.GetStore(Registry_Song)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return "", err
+	}
+
+	if song.Id == "" {
+		return store.New(song)
+	}
+
+	return song.Id, store.Set(song.Id, song)
+}
+
+// Get All Order of Services from DataStore.
 func (a *App) GetOrderOfServices() []OrderOfService {
 	store, err := a.Data.GetStore(Registry_OrderOfService)
 	if err != nil {
@@ -65,19 +97,11 @@ func (a *App) GetOrderOfServices() []OrderOfService {
 		if err != nil {
 			rt.LogError(a.ctx, err.Error())
 		}
-		services = append(services, service.(OrderOfService))
+		s := service.(OrderOfService)
+		s.Id = id
+		services = append(services, s)
 	}
 	return services
-}
-
-// Get song from DataStore.
-func (a *App) GetSong(id string) (Song, error) {
-	song, err := a.getData(Registry_Song, id)
-	if err != nil {
-		return Song{}, err
-	}
-
-	return song.(Song), nil
 }
 
 // Get order of service from DataStore.
@@ -87,5 +111,23 @@ func (a *App) GetOrderOfService(id string) (OrderOfService, error) {
 		return OrderOfService{}, err
 	}
 
-	return service.(OrderOfService), nil
+	s := service.(OrderOfService)
+	s.Id = id
+
+	return s, nil
+}
+
+// Save an order of service to the datastore.
+func (a *App) SaveOrderOfService(service OrderOfService) (serviceId string, err error) {
+	store, err := a.Data.GetStore(Registry_OrderOfService)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return "", err
+	}
+
+	if service.Id == "" {
+		return store.New(service)
+	}
+
+	return service.Id, store.Set(service.Id, service)
 }

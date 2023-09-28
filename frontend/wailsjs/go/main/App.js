@@ -21,3 +21,11 @@ export function GetSongs() {
 export function LoadSong() {
   return window['go']['main']['App']['LoadSong']();
 }
+
+export function SaveOrderOfService(arg1) {
+  return window['go']['main']['App']['SaveOrderOfService'](arg1);
+}
+
+export function SaveSong(arg1) {
+  return window['go']['main']['App']['SaveSong'](arg1);
+}

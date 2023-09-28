@@ -11,3 +11,7 @@ export function GetSong(arg1:string):Promise<main.Song>;
 export function GetSongs():Promise<Array<main.Song>>;
 
 export function LoadSong():Promise<main.SongSlide>;
+
+export function SaveOrderOfService(arg1:main.OrderOfService):Promise<string>;
+
+export function SaveSong(arg1:main.Song):Promise<string>;
