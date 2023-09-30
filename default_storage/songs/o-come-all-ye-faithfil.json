@@ -1,0 +1,49 @@
+{
+    "id": "o-come-all-ye-faithful",
+    "title": "O Come, All Ye Faithful",
+    "attribution": "John Francis Wade",
+    "license": "Public Domain",
+    "notes": "Included in the default data set as an example.",
+    "order": [
+         "Verse 1",
+         "Refrain",
+         "Verse 2",
+         "Refrain",
+         "Verse 3",
+         "Refrain",
+         "Verse 4",
+         "Refrain"
+     ],
+    "parts": [
+         {
+             "id": "Verse 1",
+             "lines": [
+                 "O come, all ye faithful, Joyful and triumphant,\nO come ye, O come ye to Bethlehem.\nCome and behold Him,Born the King of Angels!"
+             ]
+         },
+         {
+             "id": "Verse 2",
+             "lines": [
+                 "God of God, Light of Light,\n Lo, He abhors not the Virgin's womb;\nVery God, Begotten, not created!"
+             ]
+         },
+         {
+             "id": "Verse 3",
+             "lines": [
+                 "Sing, choirs of angels, Sing in exultation,\nSing all that hear in heaven God's holy word.\nGive to our Father glory in the Highest!"
+             ]
+         },
+         {
+             "id": "Verse 4",
+             "lines": [
+                 "Yea, Lord, we greet Thee, Born this happy morning,\nJesus, to Thee be glory given;\n Word of the Father, Now in flesh appearing!"
+             ]
+         },
+         {
+             "id": "Refrain",
+             "lines": [
+                 "O come, let us adore Him,\nO come, let us adore Him,\nO come, let us adore Him,\nChrist, the Lord."
+             ]
+         }
+    ]
+ }

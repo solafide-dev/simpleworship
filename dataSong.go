@@ -1,16 +1,10 @@
 package main
 
-import (
-	"encoding/json"
-	"os"
-	"strings"
-
-	rt "github.com/wailsapp/wails/v2/pkg/runtime"
-)
+import "strings"
 
 // Song represents a single song.
 type Song struct {
-	DataFile
+	Id          string     `json:"id"`          // Unique ID of the Song
 	Title       string     `json:"title"`       // Title of the Song
 	Attribution string     `json:"attribution"` // Who wrote the song / who owns the song
 	License     string     `json:"license"`     // License of the song
@@ -25,51 +19,9 @@ type SongPart struct {
 	Lines []string `json:"lines"` // The actual lyrics
 }
 
-func (s *Song) ReloadFile() error {
-	// open the file
-	file, err := os.Open(s.Filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// decode the file
-	err = json.NewDecoder(file).Decode(s)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Save a Song file
-// TODO: It would be nice is DataFile.SaveFile() could be used here with reflection somehow?
-func (s *Song) SaveFile() error {
-	// get the type of d
-	rt.LogDebug(s.ctx, "[DATAFILE SAVE] Saving "+s.Filename)
-
-	// open the file
-	file, err := os.OpenFile(s.Filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	marshaled, err := json.MarshalIndent(s, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(marshaled)
-	if err != nil {
-		return err
-	}
-
-	dataMutationEvent(s.ctx, "update", "Song", s.Id)
-
-	rt.LogDebug(s.ctx, "[DATAFILE SAVE] Saved "+s.Filename)
-	return nil
-}
+// TODO: The two methods on Song are not properly moved to Wails typescript yet.
+// Im not sure if this is a limitation of wails and we just need to arcetect differently,
+// or if I am doing something wrong.
 
 // Generate the SongML for a song.
 //
