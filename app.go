@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"github.com/solafide-dev/august"
+	"github.com/solafide-dev/gobible"
 )
 
 // App struct
 type App struct {
-	ctx  context.Context `json:"-"`
-	Data *august.August  `json:"-"`
+	ctx   context.Context  `json:"-"`
+	Data  *august.August   `json:"-"`
+	Bible *gobible.GoBible `json:"-"`
 }
 
 // NewApp creates a new App application struct
@@ -21,6 +23,8 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.initAugust() // Initialize our data storage system
+	a.initBible()  // Initialize our bible data system (will leverage august)
+	a.Data.Run()   // Run Agust now that its all setup
 }
 
 // domReady is called after front-end resources have been loaded

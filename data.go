@@ -48,8 +48,6 @@ func (a *App) initAugust() {
 	// Register our data types
 	a.Data.Register(Registry_Song, Song{})
 	a.Data.Register(Registry_OrderOfService, OrderOfService{})
-
-	a.Data.Run()
 }
 
 func (a *App) getData(store, id string) (interface{}, error) {

@@ -2,12 +2,14 @@ module simpleworship
 
 go 1.18
 
+
 require (
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/koron/go-ssdp v0.0.4
 	github.com/solafide-dev/august v1.0.0
+	github.com/solafide-dev/gobible v1.1.0
 	github.com/wailsapp/wails/v2 v2.6.0
 )
 
