@@ -3,10 +3,7 @@ package main
 import (
 	"context"
 	"embed"
-<<<<<<< HEAD
-=======
 	"fmt"
->>>>>>> data-by-august
 	"io"
 	"io/fs"
 	"os"
@@ -16,16 +13,11 @@ import (
 )
 
 const (
-<<<<<<< HEAD
-	Registry_Song           = "songs"
-	Registry_OrderOfService = "services"
-=======
 	Registry_Song = "songs"
 	DataType_Song = "song"
 
 	Registry_OrderOfService = "services"
 	DataType_OrderOfService = "service"
->>>>>>> data-by-august
 )
 
 type DataMutationEvent struct {
