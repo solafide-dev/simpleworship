@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"embed"
+<<<<<<< HEAD
+=======
+	"fmt"
+>>>>>>> data-by-august
 	"io"
 	"io/fs"
 	"os"
@@ -12,14 +16,26 @@ import (
 )
 
 const (
+<<<<<<< HEAD
 	Registry_Song           = "songs"
 	Registry_OrderOfService = "services"
+=======
+	Registry_Song = "songs"
+	DataType_Song = "song"
+
+	Registry_OrderOfService = "services"
+	DataType_OrderOfService = "service"
+>>>>>>> data-by-august
 )
 
 type DataMutationEvent struct {
 	Type     string `json:"type"`     // update, delete, create
 	DataType string `json:"dataType"` // OrderOfService, Song
 	Id       string `json:"id"`
+}
+
+type SimpleWorshipDataType struct {
+	DataType string `json:"swdt"`
 }
 
 // Storage directory -- maybe this is configurable eventually.
@@ -34,7 +50,7 @@ func (a *App) initAugust() {
 	a.Data = august.Init()
 	a.Data.Config(august.Config_StorageDir, StorageDir)
 
-	a.Data.Verbose() // Remove in production
+	//a.Data.Verbose() // Remove in production
 
 	a.Data.SetEventFunc(func(event, store, id string) {
 		data := DataMutationEvent{
@@ -48,6 +64,122 @@ func (a *App) initAugust() {
 	// Register our data types
 	a.Data.Register(Registry_Song, Song{})
 	a.Data.Register(Registry_OrderOfService, OrderOfService{})
+}
+
+func (a *App) importFile(filename string) error {
+	// Lets get our data and see if it matches any of our stores that we support importing
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return err
+	}
+
+	detect := SimpleWorshipDataType{}
+	err = a.Data.Unmarshal(data, &detect)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return err
+	}
+
+	rt.LogInfo(a.ctx, "Detected import type: "+detect.DataType)
+
+	switch detect.DataType {
+	case DataType_Song:
+		return a.importSong(data)
+	case DataType_OrderOfService:
+		return a.importOrderOfService(data)
+	default:
+		rt.LogError(a.ctx, "File is not a supported import type")
+		return fmt.Errorf("file is not a supported import type")
+	}
+}
+
+func (a *App) importSong(data []byte) error {
+	song := Song{}
+	err := a.Data.Unmarshal(data, &song)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return err
+	}
+
+	if song.Id != "" {
+		_, err := a.GetSong(song.Id)
+		if err == nil {
+			rt.LogWarning(a.ctx, "Song already exists")
+			resp, err := rt.MessageDialog(a.ctx, rt.MessageDialogOptions{
+				Type:    rt.QuestionDialog,
+				Title:   "Overwrite Song?",
+				Message: "A song with this ID already exists. Do you want to overwrite it?\n\n(Selecting no will create a new song with a new ID.)",
+			})
+			if err != nil {
+				rt.LogError(a.ctx, err.Error())
+				return err
+			}
+			if resp == "No" {
+				song.Id = "" // Clear the ID so we create a new one
+			}
+		}
+	}
+
+	// Lets enforce some rules
+	if song.Parts == nil || len(song.Parts) == 0 {
+		rt.LogError(a.ctx, "Song does not have any parts")
+		return fmt.Errorf("song does not have any parts")
+	}
+
+	if song.Title == "" {
+		rt.LogError(a.ctx, "Song does not have a title")
+		return fmt.Errorf("song does not have a title")
+	}
+
+	// We have a song, lets save it
+	savedSongId, err := a.SaveSong(song)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return err
+	}
+
+	rt.MessageDialog(a.ctx, rt.MessageDialogOptions{
+		Type:    rt.InfoDialog,
+		Title:   "Song Imported Successfully",
+		Message: "Song Imported Successfully\n\nID: " + savedSongId + "\nTitle: " + song.Title + "",
+	})
+
+	return nil
+}
+
+func (a *App) importOrderOfService(data []byte) error {
+	service := OrderOfService{}
+	err := a.Data.Unmarshal(data, &service)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return err
+	}
+
+	// Assume a service has items
+	if service.Items == nil || len(service.Items) == 0 {
+		rt.LogError(a.ctx, "Service does not have any songs")
+		return fmt.Errorf("service does not have any songs")
+	}
+
+	if service.Title == "" {
+		rt.LogError(a.ctx, "Service does not have a title")
+		return fmt.Errorf("service does not have a title")
+	}
+
+	savedServiceId, err := a.SaveOrderOfService(service)
+	if err != nil {
+		rt.LogError(a.ctx, err.Error())
+		return err
+	}
+
+	rt.MessageDialog(a.ctx, rt.MessageDialogOptions{
+		Type:    rt.InfoDialog,
+		Title:   "Order of Service Imported Successfully",
+		Message: "Order of Service Imported Successfully\n\nID: " + savedServiceId + "\nTitle: " + service.Title + "",
+	})
+
+	return nil
 }
 
 func (a *App) getData(store, id string) (interface{}, error) {
@@ -90,6 +222,13 @@ func (a *App) GetSong(id string) (Song, error) {
 	}
 
 	s := song.(Song)
+
+	if s.Id != id {
+		rt.LogWarning(a.ctx, "Song ID does not match. Updating ID in local storage")
+		s.Id = id
+		a.SaveSong(s)
+	}
+
 	s.Id = id // make sure the ID always matches our august managed ID
 
 	return s, nil
@@ -104,7 +243,13 @@ func (a *App) SaveSong(song Song) (songId string, err error) {
 	}
 
 	if song.Id == "" {
-		return store.New(song)
+		rt.LogInfo(a.ctx, "Creating new song")
+		newId, err := store.New(song)
+		if err != nil {
+			rt.LogError(a.ctx, err.Error())
+			return "", err
+		}
+		song.Id = newId
 	}
 
 	return song.Id, store.Set(song.Id, song)
@@ -140,6 +285,13 @@ func (a *App) GetOrderOfService(id string) (OrderOfService, error) {
 	}
 
 	s := service.(OrderOfService)
+
+	if s.Id != id {
+		rt.LogWarning(a.ctx, "Order of Service ID does not match. Updating ID in local storage")
+		s.Id = id
+		a.SaveOrderOfService(s)
+	}
+
 	s.Id = id // make sure the ID always matches our august managed ID
 
 	return s, nil
@@ -154,7 +306,12 @@ func (a *App) SaveOrderOfService(service OrderOfService) (serviceId string, err 
 	}
 
 	if service.Id == "" {
-		return store.New(service)
+		newId, err := store.New(service)
+		if err != nil {
+			rt.LogError(a.ctx, err.Error())
+			return "", err
+		}
+		service.Id = newId
 	}
 
 	return service.Id, store.Set(service.Id, service)
