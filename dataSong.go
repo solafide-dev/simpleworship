@@ -4,6 +4,7 @@ import "strings"
 
 // Song represents a single song.
 type Song struct {
+	SimpleWorshipDataType
 	Id          string     `json:"id"`          // Unique ID of the Song
 	Title       string     `json:"title"`       // Title of the Song
 	Attribution string     `json:"attribution"` // Who wrote the song / who owns the song

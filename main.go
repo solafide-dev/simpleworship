@@ -3,13 +3,9 @@ package main
 import (
 	"context"
 	"embed"
-	"runtime"
 
 	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/menu"
-	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options"
-	rt "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed all:frontend/dist
@@ -25,23 +21,7 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 	displayServer := NewDisplayServer()
-
-	AppMenu := menu.NewMenu()
-	FileMenu := AppMenu.AddSubmenu("File")
-	FileMenu.AddText("Open", keys.CmdOrCtrl("o"), nil)
-	FileMenu.AddText("Settings", keys.CmdOrCtrl(","), nil)
-	FileMenu.AddSeparator()
-	FileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-		rt.Quit(app.ctx)
-	})
-	PluginsMenu := AppMenu.AddSubmenu("Plugins")
-	PluginsMenu.AddSeparator()
-	PluginsMenu.AddText("Manage Plugins", nil, nil)
-	HelpMenu := AppMenu.AddSubmenu("Help")
-	HelpMenu.AddText("User's Guide", nil, nil)
-	if runtime.GOOS == "darwin" {
-		AppMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
-	}
+	AppMenu := appMenu(app)
 
 	// Create application with options
 	err := wails.Run(&options.App{
@@ -54,6 +34,7 @@ func main() {
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 			displayServer.startup(ctx)
+
 		},
 		OnShutdown: func(ctx context.Context) {
 			app.shutdown(ctx)
